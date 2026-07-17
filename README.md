@@ -52,7 +52,7 @@ Line by line, against the published `xai-org/grok-build` source:
 
 — [View all releases](../../releases)
 
-**Windows** → `Grok-Build-Safe-Setup.exe`, double-click. Signed, passes SmartScreen — no Rust toolchain needed.
+**Windows** → `Grok-Build-Safe-x64.exe`, double-click. Signed, passes SmartScreen — no Rust toolchain needed.
 
 **Mac** → `Grok-Build-Safe.dmg`, drag to Applications. Notarized, universal binary.
 
