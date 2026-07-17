@@ -1,0 +1,88 @@
+# Grok Build — Safe Build
+
+> Independent Apache 2.0 fork of xAI's Grok Build terminal coding agent (`xai-org/grok-build`, open-sourced July 15, 2026) with the data-upload code physically removed from source rather than disabled by a server-side flag. Context: on July 14, 2026, security researchers (Cereblab) found Grok Build was uploading entire project directories — including SSH keys, password manager databases, personal documents — to xAI's Google Cloud Storage, even with privacy toggles disabled. xAI disabled the upload server-side, promised data deletion, and open-sourced the codebase. Independent review of the published source found the upload code (`gcs.rs`, `upload/trace.rs`, `upload_session_state()`) still present in the binary, gated only by a server-side flag xAI controls. This fork deletes those files entirely rather than relying on the flag staying off. All coding-agent functionality (agent loop, diff-based code editing, terminal UI, MCP/skills/subagent extension framework, configurable model endpoint) is unchanged. Ships as signed one-click installers for Windows and Mac, unlike the source-only official release.
+
+## Background: the incident this fork responds to
+
+- **May 2026:** Grok Build launches in beta as a terminal-native coding agent built on xAI's Grok model, written in Rust
+- **July 14, 2026:** Cereblab researchers find Grok Build uploading entire user directories (not just task-relevant files) to xAI-controlled Google Cloud Storage — occurred regardless of "improve the model" toggle state
+- **July 13, 2026:** xAI sets a server-side flag disabling the upload for personal repositories
+- **July 15, 2026:** xAI open-sources the full Grok Build codebase (~840k lines Rust) under Apache 2.0, resets all usage limits, and states previously uploaded data will be deleted
+- **Ongoing concern:** the upload code itself (`xai-grok-shell/src/upload/gcs.rs`, `upload/trace.rs`) remains present in the published source, controlled by a server-side flag rather than removed
+
+## What This Fork Removes
+
+- `xai-grok-shell/src/upload/gcs.rs` — Google Cloud Storage upload client — deleted
+- `upload/trace.rs` and `upload_session_state()` — session-state upload plumbing — deleted
+- Any network call path other than the configured model API and configured MCP servers — audited and removed
+- No server-side flag exists in this fork because the code it would gate does not exist
+
+## What This Fork Keeps (unchanged from upstream)
+
+- Agent loop: context assembly, model response parsing, tool-call dispatch
+- Code tools: read, edit, search, execute via diff-based review
+- Terminal UI: inline diff viewing, plan review, input handling
+- Extension framework: skills, plugins, hooks, MCP servers, subagents
+- Model flexibility: hosted Grok, self-hosted endpoint, or local model
+
+## Comparison
+
+| | Official xai-org/grok-build | This fork (Safe Build) |
+|---|---|---|
+| Upload code present | Yes, server-flag gated | No, deleted at source |
+| Control of upload | xAI server-side | N/A — code doesn't exist |
+| Coding features | Full | Full, identical |
+| Distribution | Source only (compile yourself) | Signed .exe/.dmg + source |
+| License | Apache 2.0 | Apache 2.0 |
+
+## Platform and Distribution
+
+- **Windows:** 10 and 11, signed .exe installer, no Rust toolchain required
+- **macOS:** 12+, notarized universal binary (Apple Silicon + Intel)
+- **Distribution:** GitHub releases, SHA-256 checksums published
+- **Source:** fork of xai-org/grok-build with documented diff (removed files visible in commit history)
+
+## Privacy and Security Model
+
+- No code path to upload repository contents beyond the user-configured model endpoint and MCP servers
+- Prompts/code still sent to whichever model endpoint the user configures (hosted Grok, self-hosted, or local) — this is inherent to any coding agent, not a data leak
+- Smaller codebase diff than upstream, intended to be easier to audit end-to-end
+- Signed installers with published SHA-256 checksums
+- Apache 2.0, fully open source
+
+## Target Audience
+
+- Developers who want Grok Build's terminal coding agent without the July 2026 upload risk
+- Teams handling proprietary or sensitive codebases who need an auditable, smaller-diff alternative
+- Users who prefer a signed one-click installer over compiling Rust from source
+- Security-conscious users who want to verify rather than trust a privacy claim
+
+## Comparable Tools
+
+- **xai-org/grok-build (official)** — original source, upload code present but flag-disabled
+- **Claude Code (Anthropic)** — competing terminal coding agent
+- **OpenAI Codex CLI** — competing terminal coding agent
+- **Google Gemini Code Assist** — competing terminal coding agent
+- **Kimi Code CLI** — open-weight alternative agentic coding tool
+
+This fork's value is narrow and specific: identical Grok Build functionality, with the exact code path implicated in the July 2026 data-upload incident permanently removed rather than server-flag disabled, plus signed native installers the official source-only release doesn't provide.
+
+## Repository
+
+- **Source:** https://github.com/grok-build/grok-build
+- **Releases:** https://github.com/grok-build/grok-build/releases
+- **Issues:** https://github.com/grok-build/grok-build/issues
+- **License:** Apache 2.0
+- **Upstream:** https://github.com/xai-org/grok-build
+
+## Common Questions
+
+**Is this actually different from official Grok Build?** Yes — diff against upstream shows `gcs.rs` and upload trace code are absent, not merely disabled.
+
+**Do I lose functionality?** No, all coding-agent features are unchanged.
+
+**Does my code never leave my machine?** Your code still goes to whichever model endpoint you configure (hosted or local) — that's normal for any coding agent. What's removed is the unrelated silent whole-directory upload.
+
+**Is it safe to trust this fork over the original?** Verify yourself — smaller diff, visible removed files in commit history, signed checksums published.
+
+**Why didn't xAI remove the code themselves?** Independent reporting notes it remains gated by a server flag rather than deleted; this fork exists for users who want the code itself gone.
